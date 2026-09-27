@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudyBuddy Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=JetBrains+Mono:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#05050A;--bg2:#0A0A12;--bg3:#0F0F1A;--bg4:#13131F;
+  --mint:#00E5A0;--red:#FF4466;--orange:#FF8C00;--blue:#378ADD;--purple:#7B5FFF;
+  --text:#EEEEF5;--sec:#6666AA;--dim:#2A2A3F;
+  --border:rgba(255,255,255,0.07);--card:rgba(255,255,255,0.03);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* LOGIN */
+#login{min-height:100vh;display:flex;align-items:center;justify-content:center}
+.lcard{background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:48px;width:100%;max-width:420px;box-shadow:0 40px 100px rgba(0,0,0,.5)}
+.llogo{font-family:'Syne',sans-serif;font-weight:800;font-size:22px;text-align:center;margin-bottom:6px}
+.llogo span{color:var(--mint)}
+.lsub{text-align:center;color:var(--sec);font-size:12px;margin-bottom:32px}
+.lbl{display:block;font-size:10px;font-weight:700;color:var(--sec);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px}
+.inp{width:100%;padding:12px 14px;background:var(--bg);border:1px solid var(--dim);border-radius:9px;color:var(--text);font-size:14px;font-family:'JetBrains Mono',monospace;outline:none;transition:border-color .2s}
+.inp:focus{border-color:rgba(0,229,160,.4)}
+.inp::placeholder{color:var(--dim);font-family:'DM Sans',sans-serif}
+.lbtn{width:100%;margin-top:14px;padding:13px;background:var(--mint);color:#050A08;border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;transition:all .2s}
+.lbtn:hover{transform:translateY(-1px);box-shadow:0 0 24px rgba(0,229,160,.3)}
+.lerr{margin-top:10px;padding:10px;background:rgba(255,68,102,.08);border:1px solid rgba(255,68,102,.2);border-radius:8px;color:var(--red);font-size:13px;text-align:center;display:none}
+
+/* MAIN LAYOUT */
+#app{display:none;flex-direction:column;min-height:100vh}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 32px;display:flex;align-items:center;height:56px;gap:0;flex-shrink:0}
+.topbar-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:17px;margin-right:32px}
+.topbar-logo span{color:var(--mint)}
+.nav-tabs{display:flex;height:100%;gap:0}
+.nav-tab{padding:0 18px;height:100%;display:flex;align-items:center;font-size:13px;font-weight:500;color:var(--sec);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap}
+.nav-tab:hover{color:var(--text)}
+.nav-tab.active{color:var(--mint);border-bottom-color:var(--mint)}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+.worker-badge{padding:4px 12px;background:rgba(0,229,160,.08);border:1px solid rgba(0,229,160,.2);border-radius:8px;font-size:11px;color:var(--mint);font-family:'JetBrains Mono',monospace;cursor:pointer}
+.signout-btn{padding:6px 14px;background:none;border:1px solid var(--border);border-radius:8px;color:var(--sec);font-size:12px;cursor:pointer;font-family:inherit;transition:all .15s}
+.signout-btn:hover{border-color:var(--red);color:var(--red)}
+
+.content{flex:1;overflow:auto}
+.page{display:none;padding:28px 32px}
+.page.active{display:block}
+
+/* STATS GRID */
+.stats-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:28px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 18px;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.stat-card.c-mint::before{background:var(--mint)}
+.stat-card.c-blue::before{background:var(--blue)}
+.stat-card.c-purple::before{background:var(--purple)}
+.stat-card.c-orange::before{background:var(--orange)}
+.stat-card.c-red::before{background:var(--red)}
+.stat-card.c-gray::before{background:var(--sec)}
+.stat-num{font-family:'Syne',sans-serif;font-weight:800;font-size:28px;line-height:1;margin-bottom:4px}
+.stat-lbl{font-size:11px;color:var(--sec);text-transform:uppercase;letter-spacing:.08em}
+.stat-card.c-mint .stat-num{color:var(--mint)}
+.stat-card.c-blue .stat-num{color:var(--blue)}
+.stat-card.c-purple .stat-num{color:var(--purple)}
+.stat-card.c-orange .stat-num{color:var(--orange)}
+.stat-card.c-red .stat-num{color:var(--red)}
+.stat-card.c-gray .stat-num{color:var(--sec)}
+
+/* SECTION */
+.section{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:20px}
+.section-header{padding:14px 20px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.section-title{font-family:'Syne',sans-serif;font-weight:700;font-size:14px}
+.section-body{padding:20px}
+
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{padding:10px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.1em;border-bottom:1px solid var(--border);background:var(--bg2);font-family:'JetBrains Mono',monospace;white-space:nowrap}
+.tbl td{padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.03);vertical-align:middle}
+.tbl tr:last-child td{border:none}
+.tbl tr:hover td{background:rgba(255,255,255,.015)}
+.mono{font-family:'JetBrains Mono',monospace;font-size:12px}
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:6px;font-size:11px;font-weight:600;font-family:'JetBrains Mono',monospace;white-space:nowrap}
+.badge-monthly{background:rgba(0,229,160,.1);color:var(--mint)}
+.badge-weekly{background:rgba(55,138,221,.1);color:var(--blue)}
+.badge-daily{background:rgba(255,200,0,.1);color:#FFD000}
+.badge-lifetime{background:rgba(123,95,255,.1);color:var(--purple)}
+.badge-active{background:rgba(0,229,160,.1);color:var(--mint)}
+.badge-expired{background:rgba(255,68,102,.1);color:var(--red)}
+.badge-revoked{background:rgba(255,68,102,.15);color:var(--red)}
+.badge-paused{background:rgba(255,140,0,.1);color:var(--orange)}
+.badge-na{background:rgba(255,255,255,.05);color:var(--sec)}
+
+/* ACTION BUTTONS */
+.act-btn{padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;border:none;transition:all .15s;white-space:nowrap}
+.act-revoke{background:rgba(255,68,102,.1);color:var(--red);border:1px solid rgba(255,68,102,.2)}
+.act-revoke:hover{background:rgba(255,68,102,.2)}
+.act-pause{background:rgba(255,140,0,.1);color:var(--orange);border:1px solid rgba(255,140,0,.2)}
+.act-pause:hover{background:rgba(255,140,0,.2)}
+.act-unpause{background:rgba(0,229,160,.1);color:var(--mint);border:1px solid rgba(0,229,160,.2)}
+.act-unpause:hover{background:rgba(0,229,160,.2)}
+.act-reset{background:rgba(55,138,221,.1);color:var(--blue);border:1px solid rgba(55,138,221,.2)}
+.act-reset:hover{background:rgba(55,138,221,.2)}
+.act-info{background:var(--bg3);color:var(--sec);border:1px solid var(--border)}
+.act-info:hover{color:var(--text)}
+.acts{display:flex;gap:5px;flex-wrap:wrap}
+
+/* GENERATE FORM */
+.gen-form{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:12px;align-items:end;margin-bottom:20px}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-lbl{font-size:10px;font-weight:700;color:var(--sec);text-transform:uppercase;letter-spacing:.08em;font-family:'JetBrains Mono',monospace}
+select.form-inp,.form-inp{padding:10px 12px;background:var(--bg);border:1px solid var(--dim);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;transition:border-color .2s;appearance:none;width:100%}
+select.form-inp:focus,.form-inp:focus{border-color:rgba(0,229,160,.4)}
+.gen-btn{padding:11px 20px;background:var(--mint);color:#050A08;border:none;border-radius:9px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;transition:all .2s;white-space:nowrap}
+.gen-btn:hover{transform:translateY(-1px);box-shadow:0 0 20px rgba(0,229,160,.3)}
+
+/* GENERATED KEY BANNER */
+.key-banner{background:rgba(0,229,160,.06);border:1px solid rgba(0,229,160,.25);border-radius:12px;padding:16px 20px;margin-bottom:20px;display:none;align-items:center;gap:14px}
+.key-banner.show{display:flex}
+.key-text{font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:600;color:var(--text);flex:1;letter-spacing:.05em;user-select:all}
+.copy-btn{padding:8px 16px;background:rgba(0,229,160,.1);border:1px solid rgba(0,229,160,.25);border-radius:8px;color:var(--mint);font-weight:600;font-size:12px;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
+.copy-btn:hover{background:rgba(0,229,160,.18)}
+
+/* SEARCH */
+.search-row{display:flex;gap:10px;margin-bottom:16px}
+.search-inp{flex:1;padding:10px 14px;background:var(--bg);border:1px solid var(--dim);border-radius:9px;color:var(--text);font-size:13px;font-family:inherit;outline:none;transition:border-color .2s}
+.search-inp:focus{border-color:rgba(0,229,160,.35)}
+.search-inp::placeholder{color:var(--dim)}
+.filter-btn{padding:10px 14px;background:var(--card);border:1px solid var(--border);border-radius:9px;color:var(--sec);font-size:12px;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
+.filter-btn.on{background:rgba(0,229,160,.08);border-color:rgba(0,229,160,.2);color:var(--mint)}
+
+/* LOOKUP */
+.lookup-row{display:flex;gap:10px;margin-bottom:16px}
+.lookup-result{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:20px;display:none}
+.lookup-result.show{display:block}
+.lr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:12px}
+.lr-item{display:flex;flex-direction:column;gap:3px}
+.lr-label{font-size:10px;font-weight:700;color:var(--sec);text-transform:uppercase;letter-spacing:.08em;font-family:'JetBrains Mono',monospace}
+.lr-value{font-size:13px;color:var(--text)}
+.lr-actions{display:flex;gap:8px;margin-top:16px;padding-top:16px;border-top:1px solid var(--border);flex-wrap:wrap}
+
+/* LOGS */
+.log-entry{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.03);align-items:flex-start}
+.log-entry:last-child{border:none}
+.log-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.log-body{flex:1;min-width:0}
+.log-title{font-size:13px;font-weight:500}
+.log-meta{font-size:11px;color:var(--sec);margin-top:2px;font-family:'JetBrains Mono',monospace}
+.log-time{font-size:11px;color:var(--dim);flex-shrink:0;font-family:'JetBrains Mono',monospace;white-space:nowrap}
+.log-empty{text-align:center;padding:40px;color:var(--sec);font-size:13px}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:none;align-items:center;justify-content:center}
+.modal-bg.show{display:flex}
+.modal{background:var(--bg3);border:1px solid var(--border);border-radius:16px;padding:28px;width:100%;max-width:440px}
+.modal-title{font-family:'Syne',sans-serif;font-weight:700;font-size:18px;margin-bottom:8px}
+.modal-desc{font-size:13px;color:var(--sec);margin-bottom:20px;line-height:1.6}
+.modal-btns{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+.modal-cancel{padding:10px 18px;background:none;border:1px solid var(--border);border-radius:8px;color:var(--sec);cursor:pointer;font-family:inherit;font-size:13px}
+.modal-cancel:hover{color:var(--text)}
+.modal-confirm{padding:10px 18px;border:none;border-radius:8px;color:#fff;cursor:pointer;font-family:inherit;font-size:13px;font-weight:700}
+.modal-confirm.danger{background:var(--red)}
+.modal-confirm.warn{background:var(--orange)}
+
+/* MISC */
+.page-title{font-family:'Syne',sans-serif;font-weight:800;font-size:22px;margin-bottom:20px}
+.empty{text-align:center;padding:48px;color:var(--sec);font-size:13px}
+.toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;font-size:13px;font-weight:500;z-index:200;transform:translateY(20px);opacity:0;transition:all .25s}
+.toast.show{transform:none;opacity:1}
+.toast.success{border-color:rgba(0,229,160,.3);color:var(--mint)}
+.toast.error{border-color:rgba(255,68,102,.3);color:var(--red)}
+.toast.info{border-color:rgba(55,138,221,.3);color:var(--blue)}
+.divider{height:1px;background:var(--border);margin:20px 0}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login">
+  <div class="lcard">
+    <div class="llogo">Study<span>Buddy</span> Admin</div>
+    <div class="lsub">🔐 Authorized access only</div>
+    <label class="lbl">Admin Password</label>
+    <input type="password" class="inp" id="adminPass" placeholder="••••••••" autocomplete="off">
+    <button class="lbtn" onclick="doLogin()">Access Dashboard →</button>
+    <div class="lerr" id="lerr">Incorrect password.</div>
+  </div>
+</div>
+
+<!-- SETUP BANNER (shown when Worker not configured) -->
+<div id="setup-banner" style="display:none;background:rgba(255,140,0,.08);border-bottom:1px solid rgba(255,140,0,.25);padding:12px 32px;display:none;align-items:center;gap:14px">
+  <span style="font-size:14px">⚠️</span>
+  <span style="font-size:13px;color:#FF8C00;font-weight:500">Worker not configured — actions and lookup won't work until you enter your Worker URL and secret in Settings.</span>
+  <button onclick="goPage('settings');document.getElementById('setup-banner').style.display='none'" style="margin-left:auto;padding:6px 14px;background:rgba(255,140,0,.15);border:1px solid rgba(255,140,0,.3);border-radius:8px;color:#FF8C00;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Go to Settings →</button>
+  <button onclick="document.getElementById('setup-banner').style.display='none'" style="padding:6px 10px;background:none;border:none;color:#FF8C00;cursor:pointer;font-size:14px">✕</button>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-logo">Study<span>Buddy</span></div>
+    <div class="nav-tabs">
+      <div class="nav-tab active" onclick="goPage('dashboard')">📊 Dashboard</div>
+      <div class="nav-tab" onclick="goPage('keys')">🔑 Keys</div>
+      <div class="nav-tab" onclick="goPage('generate')">⚡ Generate</div>
+      <div class="nav-tab" onclick="goPage('lookup')">🔍 Lookup</div>
+      <div class="nav-tab" onclick="goPage('logs')">📋 Logs</div>
+      <div class="nav-tab" onclick="goPage('settings')">⚙️ Settings</div>
+    </div>
+    <div class="topbar-right">
+      <div class="worker-badge" onclick="testWorker()" title="Click to test Worker connection">● Worker</div>
+      <button class="signout-btn" onclick="doLogout()">Sign Out</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-title">Dashboard</div>
+      <div class="stats-grid">
+        <div class="stat-card c-mint"><div class="stat-num" id="s-total">0</div><div class="stat-lbl">Total Keys</div></div>
+        <div class="stat-card c-blue"><div class="stat-num" id="s-active">0</div><div class="stat-lbl">Active</div></div>
+        <div class="stat-card c-purple"><div class="stat-num" id="s-lifetime">0</div><div class="stat-lbl">Lifetime</div></div>
+        <div class="stat-card c-orange"><div class="stat-num" id="s-expired">0</div><div class="stat-lbl">Expired</div></div>
+        <div class="stat-card c-red"><div class="stat-num" id="s-revoked">0</div><div class="stat-lbl">Revoked</div></div>
+        <div class="stat-card c-gray"><div class="stat-num" id="s-paused">0</div><div class="stat-lbl">Paused</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div class="section">
+          <div class="section-header"><div class="section-title">Recent Activity</div></div>
+          <div style="max-height:320px;overflow-y:auto;padding:16px" id="dash-logs"></div>
+        </div>
+        <div class="section">
+          <div class="section-header"><div class="section-title">Quick Actions</div></div>
+          <div class="section-body" style="display:flex;flex-direction:column;gap:10px">
+            <button onclick="goPage('generate')" style="padding:12px;background:rgba(0,229,160,.08);border:1px solid rgba(0,229,160,.2);border-radius:10px;color:var(--mint);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left">⚡ Generate New Key</button>
+            <button onclick="goPage('lookup')" style="padding:12px;background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;text-align:left">🔍 Look Up a Key</button>
+            <button onclick="goPage('keys')" style="padding:12px;background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;text-align:left">🔑 Manage All Keys</button>
+            <button onclick="exportCSV()" style="padding:12px;background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;text-align:left">📥 Export Keys to CSV</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KEYS -->
+    <div class="page" id="page-keys">
+      <div class="page-title">Key Management</div>
+      <div class="search-row">
+        <input type="text" class="search-inp" id="keySearch" placeholder="Search by key, note, tier…" oninput="renderKeys()">
+        <button class="filter-btn" id="f-active" onclick="toggleFilter('active')">Active</button>
+        <button class="filter-btn" id="f-expired" onclick="toggleFilter('expired')">Expired</button>
+        <button class="filter-btn" id="f-revoked" onclick="toggleFilter('revoked')">Revoked</button>
+        <button class="filter-btn" id="f-paused" onclick="toggleFilter('paused')">Paused</button>
+        <button onclick="exportCSV()" style="padding:10px 14px;background:var(--card);border:1px solid var(--border);border-radius:9px;color:var(--sec);font-size:12px;cursor:pointer;font-family:inherit">📥 Export CSV</button>
+      </div>
+      <div class="section">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>Key</th><th>Tier</th><th>Note</th>
+              <th>Expires</th><th>Status</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="keys-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- GENERATE -->
+    <div class="page" id="page-generate">
+      <div class="page-title">Generate Keys</div>
+      <div class="section">
+        <div class="section-header"><div class="section-title">Single Key</div></div>
+        <div class="section-body">
+          <div class="gen-form">
+            <div class="form-group">
+              <label class="form-lbl">Tier</label>
+              <select class="form-inp" id="g-tier">
+                <option value="D">Daily (24 hours)</option>
+                <option value="W">Weekly (7 days)</option>
+                <option value="M" selected>Monthly (30 days)</option>
+                <option value="L">Lifetime (forever)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-lbl">Note / Label</label>
+              <input type="text" class="form-inp" id="g-note" placeholder="e.g. John — beta tester">
+            </div>
+            <div class="form-group">
+              <label class="form-lbl">Custom expiry (days)</label>
+              <input type="number" class="form-inp" id="g-days" placeholder="Leave blank = default">
+            </div>
+            <button class="gen-btn" onclick="generateOne()">⚡ Generate</button>
+          </div>
+          <div class="key-banner" id="key-banner">
+            <div>
+              <div style="font-size:10px;font-weight:700;color:var(--mint);letter-spacing:.1em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:6px">✓ New Key Generated</div>
+              <div class="key-text" id="key-output"></div>
+              <div style="font-size:11px;color:var(--sec);margin-top:4px" id="key-meta"></div>
+            </div>
+            <button class="copy-btn" onclick="copyKey()">📋 Copy</button>
+          </div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-header"><div class="section-title">Batch Generate</div></div>
+        <div class="section-body">
+          <div class="gen-form">
+            <div class="form-group">
+              <label class="form-lbl">Tier</label>
+              <select class="form-inp" id="b-tier">
+                <option value="D">Daily</option>
+                <option value="W">Weekly</option>
+                <option value="M">Monthly</option>
+                <option value="L">Lifetime</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-lbl">Count (max 50)</label>
+              <input type="number" class="form-inp" id="b-count" value="5" min="1" max="50">
+            </div>
+            <div class="form-group">
+              <label class="form-lbl">Label Prefix</label>
+              <input type="text" class="form-inp" id="b-label" placeholder="Batch #1">
+            </div>
+            <button class="gen-btn" onclick="generateBatch()">Generate All</button>
+          </div>
+          <div id="batch-out" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--mint);white-space:pre;overflow-x:auto;display:none;line-height:1.9"></div>
+          <button id="batch-copy" onclick="copyBatch()" style="display:none;margin-top:8px" class="copy-btn">📋 Copy All</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOOKUP -->
+    <div class="page" id="page-lookup">
+      <div class="page-title">Key Lookup</div>
+      <div class="section">
+        <div class="section-header"><div class="section-title">Look up any key in KV database</div></div>
+        <div class="section-body">
+          <div class="lookup-row">
+            <input type="text" class="search-inp" id="lookup-inp" placeholder="SBM-XXXXXXXX-XXXXX-XXXXXXXX" spellcheck="false">
+            <button class="gen-btn" onclick="doLookup()">🔍 Look Up</button>
+          </div>
+          <div class="lookup-result" id="lookup-result">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+              <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:16px" id="lr-title"></div>
+              <div id="lr-status-badge"></div>
+            </div>
+            <div class="lr-grid" id="lr-grid"></div>
+            <div class="lr-actions" id="lr-actions"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOGS -->
+    <div class="page" id="page-logs">
+      <div class="page-title">Activity Logs</div>
+      <div style="display:flex;gap:10px;margin-bottom:16px;align-items:center">
+        <button class="filter-btn on" id="lf-all" onclick="filterLogs('all')">All</button>
+        <button class="filter-btn" id="lf-activate" onclick="filterLogs('activate')">Activations</button>
+        <button class="filter-btn" id="lf-revoke" onclick="filterLogs('revoke')">Revokes</button>
+        <button class="filter-btn" id="lf-reset" onclick="filterLogs('reset')">Resets</button>
+        <button class="filter-btn" id="lf-error" onclick="filterLogs('error')">Errors</button>
+        <div style="margin-left:auto;display:flex;gap:8px">
+          <button onclick="clearLogs()" style="padding:8px 14px;background:none;border:1px solid var(--border);border-radius:8px;color:var(--sec);font-size:12px;cursor:pointer;font-family:inherit">Clear Logs</button>
+          <button onclick="exportLogs()" style="padding:8px 14px;background:none;border:1px solid var(--border);border-radius:8px;color:var(--sec);font-size:12px;cursor:pointer;font-family:inherit">📥 Export</button>
+        </div>
+      </div>
+      <div class="section">
+        <div style="padding:16px 20px;max-height:600px;overflow-y:auto" id="logs-list"></div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="page" id="page-settings">
+      <div class="page-title">Settings</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div class="section">
+          <div class="section-header"><div class="section-title">Worker Connection</div></div>
+          <div class="section-body">
+            <div class="form-group" style="margin-bottom:14px">
+              <label class="form-lbl">Worker URL</label>
+              <input type="text" class="form-inp" id="s-worker-url" placeholder="https://...workers.dev">
+            </div>
+            <div class="form-group" style="margin-bottom:14px">
+              <label class="form-lbl">Worker Secret</label>
+              <input type="password" class="form-inp" id="s-worker-secret" placeholder="Your WORKER_SECRET value">
+            </div>
+            <button onclick="saveWorkerSettings()" class="gen-btn" style="width:100%">Save & Test Connection</button>
+            <div id="worker-test-result" style="margin-top:10px;font-size:12px;display:none"></div>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-header"><div class="section-title">Admin Password</div></div>
+          <div class="section-body">
+            <div class="form-group" style="margin-bottom:14px">
+              <label class="form-lbl">New Password</label>
+              <input type="password" class="form-inp" id="s-newpass" placeholder="New password">
+            </div>
+            <div class="form-group" style="margin-bottom:14px">
+              <label class="form-lbl">Confirm Password</label>
+              <input type="password" class="form-inp" id="s-confirmpass" placeholder="Confirm new password">
+            </div>
+            <button onclick="changePassword()" class="gen-btn" style="width:100%;background:var(--blue)">Change Password</button>
+          </div>
+        </div>
+      </div>
+      <div class="section" style="margin-top:20px">
+        <div class="section-header"><div class="section-title">Danger Zone</div></div>
+        <div class="section-body" style="display:flex;gap:12px;flex-wrap:wrap">
+          <button onclick="confirmClearAll()" style="padding:10px 18px;background:rgba(255,68,102,.1);border:1px solid rgba(255,68,102,.2);border-radius:9px;color:var(--red);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🗑 Clear All Keys (local)</button>
+          <button onclick="clearLogs()" style="padding:10px 18px;background:rgba(255,140,0,.1);border:1px solid rgba(255,140,0,.2);border-radius:9px;color:var(--orange);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🗑 Clear Activity Logs</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <div class="modal-title" id="modal-title"></div>
+    <div class="modal-desc" id="modal-desc"></div>
+    <div class="form-group" id="modal-reason-group" style="margin-bottom:0;display:none">
+      <label class="form-lbl">Reason (optional)</label>
+      <input type="text" class="form-inp" id="modal-reason" placeholder="e.g. Rule violation, key sharing">
+    </div>
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="closeModal()">Cancel</button>
+      <button class="modal-confirm" id="modal-confirm-btn" onclick="runModalAction()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════
+//  CRYPTO — same HMAC engine as everything else
+// ══════════════════════════════════════════════════════
+const _k1=[0x11,0x00,0x1d,0x0a,0x0f,0x03,0x01,0x1d];
+const _k2=[0x11,0x07,0x01,0x10,0x07,0x16,0x1d,0x70];
+const _k3=[0x72,0x70,0x77,0x1d,0x1a,0x7b,0x09,0x75];
+const _k4=[0x12,0x3f,0x2e,0x1d,0x0a,0x7b,0x2e,0x30];
+const _xk=0x42;
+function _getSecret(){return new Uint8Array([..._k1,..._k2,..._k3,..._k4].map(b=>b^_xk));}
+async function _hmac(p){
+  const k=await crypto.subtle.importKey('raw',_getSecret(),{name:'HMAC',hash:'SHA-256'},false,['sign']);
+  const s=await crypto.subtle.sign('HMAC',k,new TextEncoder().encode(p));
+  return Array.from(new Uint8Array(s)).map(b=>b.toString(16).padStart(2,'0')).join('').toUpperCase();
+}
+async function sha256(s){
+  const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));
+  return Array.from(new Uint8Array(b)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+const TIER_DAYS={D:1,W:7,M:30,L:null};
+const TIER_NAMES={D:'Daily',W:'Weekly',M:'Monthly',L:'Lifetime'};
+
+async function buildKey(tier, customDays){
+  const now=Math.floor(Date.now()/1000);
+  const days=customDays||TIER_DAYS[tier];
+  const expiry=days===null?9999999999:now+(days*86400);
+  const nonce=Array.from(crypto.getRandomValues(new Uint8Array(4))).map(b=>b.toString(36).toUpperCase().padStart(2,'0')).join('').slice(0,5);
+  const expiryB36=expiry.toString(36).toUpperCase();
+  const payload=`${tier}:${expiry}:${nonce}`;
+  const sig=(await _hmac(payload)).slice(0,8);
+  return{key:`SB${tier}-${expiryB36}-${nonce}-${sig}`,expiry,tier,nonce};
+}
+
+// ══════════════════════════════════════════════════════
+//  AUTH
+// ══════════════════════════════════════════════════════
+async function doLogin(){
+  const pass=document.getElementById('adminPass').value;
+  const hash=await sha256(pass);
+  const stored=localStorage.getItem('sb_admin_hash');
+  const defaultHash=await sha256('StudyBuddy2025!');
+  if(hash===defaultHash||hash===stored){
+    localStorage.setItem('sb_admin_hash',hash);
+    document.getElementById('login').style.display='none';
+    document.getElementById('app').style.display='flex';
+    init();
+  } else {
+    const e=document.getElementById('lerr');
+    e.style.display='block';
+    setTimeout(()=>e.style.display='none',3000);
+  }
+}
+function doLogout(){
+  document.getElementById('app').style.display='none';
+  document.getElementById('login').style.display='flex';
+  document.getElementById('adminPass').value='';
+}
+document.getElementById('adminPass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+
+// ══════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════
+function getKeys(){return JSON.parse(localStorage.getItem('sb_keys')||'[]');}
+function saveKeys(k){localStorage.setItem('sb_keys',JSON.stringify(k));}
+function getLogs(){return JSON.parse(localStorage.getItem('sb_logs')||'[]');}
+function saveLogs(l){localStorage.setItem('sb_logs',JSON.stringify(l.slice(0,500)));}
+function getSettings(){return JSON.parse(localStorage.getItem('sb_settings')||'{}');}
+function saveSettings(s){localStorage.setItem('sb_settings',JSON.stringify(s));}
+
+function addLog(type,title,detail,color){
+  const logs=getLogs();
+  logs.unshift({type,title,detail,color,time:Date.now()});
+  saveLogs(logs);
+  renderLogs();
+  renderDashLogs();
+}
+
+// ══════════════════════════════════════════════════════
+//  WORKER CALLS
+// ══════════════════════════════════════════════════════
+async function workerCall(endpoint, body){
+  const s=getSettings();
+  if(!s.workerUrl||!s.workerSecret){
+    return { error:'Worker not configured — go to Settings first' };
+  }
+  try {
+    const res=await fetch(s.workerUrl+endpoint,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Worker-Secret':s.workerSecret},
+      body:JSON.stringify(body)
+    });
+    const data = await res.json();
+    // Attach HTTP status for debugging
+    data._status = res.status;
+    return data;
+  } catch(e) {
+    return { error: 'Network error: '+e.message };
+  }
+}
+
+async function testWorker(){
+  const s=getSettings();
+  if(!s.workerUrl){showToast('Worker URL not set — go to Settings','error');return;}
+  try{
+    const res=await fetch(s.workerUrl+'/',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
+    const d=await res.json();
+    if(d.error==='Unknown endpoint'||res.ok){
+      showToast('✅ Worker is online','success');
+      document.querySelector('.worker-badge').style.background='rgba(0,229,160,.15)';
+    }
+  } catch(e){
+    showToast('❌ Worker unreachable: '+e.message,'error');
+    document.querySelector('.worker-badge').style.background='rgba(255,68,102,.15)';
+  }
+}
+
+// ══════════════════════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════════════════════
+function goPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(t=>{if(t.textContent.toLowerCase().includes(id.slice(0,4)))t.classList.add('active');});
+  if(id==='keys')renderKeys();
+  if(id==='dashboard'){updateStats();renderDashLogs();}
+  if(id==='logs')renderLogs();
+  if(id==='settings')loadSettings();
+}
+
+// ══════════════════════════════════════════════════════
+//  STATS
+// ══════════════════════════════════════════════════════
+function updateStats(){
+  const keys=getKeys();
+  const now=Math.floor(Date.now()/1000);
+  document.getElementById('s-total').textContent=keys.length;
+  document.getElementById('s-active').textContent=keys.filter(k=>k.status!=='revoked'&&k.status!=='paused'&&(k.tier==='L'||k.expiry>now)).length;
+  document.getElementById('s-lifetime').textContent=keys.filter(k=>k.tier==='L').length;
+  document.getElementById('s-expired').textContent=keys.filter(k=>k.tier!=='L'&&k.expiry<=now&&k.status!=='revoked').length;
+  document.getElementById('s-revoked').textContent=keys.filter(k=>k.status==='revoked').length;
+  document.getElementById('s-paused').textContent=keys.filter(k=>k.status==='paused').length;
+}
+
+// ══════════════════════════════════════════════════════
+//  KEY MANAGEMENT
+// ══════════════════════════════════════════════════════
+let activeFilters=new Set();
+function toggleFilter(f){
+  const btn=document.getElementById('f-'+f);
+  if(activeFilters.has(f)){activeFilters.delete(f);btn.classList.remove('on');}
+  else{activeFilters.add(f);btn.classList.add('on');}
+  renderKeys();
+}
+
+function renderKeys(){
+  const keys=getKeys();
+  const q=document.getElementById('keySearch').value.toLowerCase();
+  const now=Math.floor(Date.now()/1000);
+  const tbody=document.getElementById('keys-tbody');
+
+  const filtered=keys.filter((k,i)=>{
+    const status=getKeyStatus(k,now);
+    if(activeFilters.size>0&&!activeFilters.has(status))return false;
+    if(q&&!k.key.toLowerCase().includes(q)&&!(k.note||'').toLowerCase().includes(q)&&!TIER_NAMES[k.tier].toLowerCase().includes(q))return false;
+    return true;
+  });
+
+  if(!filtered.length){tbody.innerHTML=`<tr><td colspan="6"><div class="empty">No keys match your filter</div></td></tr>`;return;}
+
+  tbody.innerHTML=filtered.map((k,i)=>{
+    const realIdx=keys.indexOf(k);
+    const status=getKeyStatus(k,now);
+    const expDisplay=k.tier==='L'?'∞ Never':new Date(k.expiry*1000).toLocaleDateString();
+    const statusBadge=`<span class="badge badge-${status}">${status}</span>`;
+    const tierBadge=`<span class="badge badge-${k.tier.toLowerCase()}">${TIER_NAMES[k.tier]}</span>`;
+    const actions=buildActions(k,realIdx,status);
+    return `<tr>
+      <td><span class="mono" title="${k.key}">${k.key.slice(0,20)}…</span></td>
+      <td>${tierBadge}</td>
+      <td style="color:var(--sec);font-size:12px">${k.note||'—'}</td>
+      <td style="font-size:12px">${expDisplay}</td>
+      <td>${statusBadge}</td>
+      <td><div class="acts">${actions}</div></td>
+    </tr>`;
+  }).join('');
+}
+
+function getKeyStatus(k,now){
+  if(k.status==='revoked')return'revoked';
+  if(k.status==='paused')return'paused';
+  if(k.tier!=='L'&&k.expiry<=now)return'expired';
+  return'active';
+}
+
+function buildActions(k,idx,status){
+  const copy=`<button class="act-btn act-info" onclick="copyText('${k.key}',this)">Copy</button>`;
+  const info=`<button class="act-btn act-info" onclick="lookupKey('${k.key}')">🔍</button>`;
+  const hwreset=`<button class="act-btn act-reset" onclick="doHwReset('${k.key}','${idx}')">Reset HW</button>`;
+  if(status==='revoked'){
+    return copy+info;
+  }
+  if(status==='paused'){
+    return copy+info+
+      `<button class="act-btn act-unpause" onclick="doPauseAction('${k.key}','${idx}','unpause')">▶ Unpause</button>`+
+      `<button class="act-btn act-revoke" onclick="doPauseAction('${k.key}','${idx}','revoke')">🔴 Revoke</button>`;
+  }
+  if(status==='expired'){
+    return copy+info+
+      `<button class="act-btn act-revoke" onclick="doPauseAction('${k.key}','${idx}','revoke')">🔴 Revoke</button>`;
+  }
+  // active
+  return copy+info+hwreset+
+    `<button class="act-btn act-pause" onclick="doPauseAction('${k.key}','${idx}','pause')">⏸ Pause</button>`+
+    `<button class="act-btn act-revoke" onclick="doPauseAction('${k.key}','${idx}','revoke')">🔴 Revoke</button>`;
+}
+
+function doPauseAction(key,idx,action){
+  const titles={pause:'⏸ Pause Key',revoke:'🔴 Revoke Key',unpause:'▶ Unpause Key'};
+  const descs={
+    pause:'The key will stop working immediately until you unpause it. The holder will see "Key suspended" when trying to use StudyBuddy.',
+    revoke:'The key will be permanently revoked and cannot be used. This cannot be undone.',
+    unpause:'The key will be restored to active status.'
+  };
+  const styles={pause:'warn',revoke:'danger',unpause:'warn'};
+  openModal(titles[action],descs[action],action!=='unpause',()=>executeKeyAction(key,idx,action),styles[action]);
+}
+
+async function executeKeyAction(key,idx,action){
+  const reason=document.getElementById('modal-reason').value.trim();
+  const keys=getKeys();
+
+  // Always update local state immediately
+  if(action==='revoke'){
+    keys[idx].status='revoked';
+    keys[idx].revokeReason=reason||'No reason given';
+  } else if(action==='pause'){
+    keys[idx].status='paused';
+    keys[idx].pauseReason=reason||'No reason given';
+  } else if(action==='unpause'){
+    keys[idx].status='active';
+    delete keys[idx].pauseReason;
+  }
+  saveKeys(keys);
+  addLog(action,`Key ${action}d`,key.slice(0,20)+'…',action==='revoke'?'#FF4466':action==='pause'?'#FF8C00':'#00E5A0');
+  updateStats();
+  renderKeys();
+  showToast(`✅ Key ${action}d (local)`, 'success');
+
+  // Also call Worker to take effect in extension
+  const s=getSettings();
+  if(!s.workerUrl||!s.workerSecret){
+    showToast(`⚠️ Key ${action}d locally only — configure Worker in Settings to block the extension too`,'info');
+    return;
+  }
+  try{
+    const ep=action==='revoke'?'/admin/revoke':action==='pause'?'/admin/pause':'/admin/unpause';
+    const result=await workerCall(ep,{key,reason});
+    if(result.error){
+      showToast(`Worker: ${result.error}`,'error');
+    } else {
+      showToast(`✅ Key ${action}d — extension access blocked immediately`,'success');
+    }
+  } catch(e){
+    showToast(`Local update done. Worker error: ${e.message}`,'info');
+  }
+}
+
+async function doHwReset(key,idx){
+  openModal('🔄 Reset Hardware Binding','Clear the hardware binding so the holder can use this key on a new device. Their next use will become the new bound device.',false,async()=>{
+    const s=getSettings();
+    if(!s.workerUrl||!s.workerSecret){
+      showToast('Worker not configured — go to Settings first','error');return;
+    }
+    try{
+      // First do a lookup to get the discordUserId, then reset
+      const info=await workerCall('/admin/lookup',{key});
+      if(!info.activated){showToast('Key not activated yet — nothing to reset','info');return;}
+      // Use admin/reset endpoint
+      const result=await workerCall('/admin/hwreset',{key});
+      if(result.error){showToast('Worker error: '+result.error,'error');return;}
+      addLog('reset','Hardware Reset',key.slice(0,20)+'…','#378ADD');
+      showToast('✅ Hardware reset — next device to use this key will be bound','success');
+    } catch(e){showToast('Error: '+e.message,'error');}
+  },'warn');
+}
+
+// ══════════════════════════════════════════════════════
+//  GENERATE
+// ══════════════════════════════════════════════════════
+async function generateOne(){
+  const tier=document.getElementById('g-tier').value;
+  const note=document.getElementById('g-note').value.trim();
+  const customDays=parseInt(document.getElementById('g-days').value)||null;
+  const {key,expiry}=await buildKey(tier,customDays);
+  const keys=getKeys();
+  keys.unshift({key,tier,note,expiry,status:'active',created:Math.floor(Date.now()/1000)});
+  saveKeys(keys);
+  document.getElementById('key-output').textContent=key;
+  const expDisplay=tier==='L'?'Never':new Date(expiry*1000).toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('key-meta').textContent=`${TIER_NAMES[tier]} · Expires: ${expDisplay}${note?' · '+note:''}`;
+  document.getElementById('key-banner').classList.add('show');
+  document.getElementById('g-note').value='';
+  addLog('generate','Key Generated',key.slice(0,20)+'…','#00E5A0');
+  updateStats();
+  showToast('✅ Key generated','success');
+}
+
+async function generateBatch(){
+  const tier=document.getElementById('b-tier').value;
+  const count=Math.min(50,Math.max(1,parseInt(document.getElementById('b-count').value)||5));
+  const label=document.getElementById('b-label').value.trim();
+  const keys=getKeys();
+  const lines=[];
+  for(let i=0;i<count;i++){
+    const {key,expiry}=await buildKey(tier,null);
+    const note=label?`${label} #${i+1}`:'';
+    keys.unshift({key,tier,note,expiry,status:'active',created:Math.floor(Date.now()/1000)});
+    lines.push(key);
+  }
+  saveKeys(keys);
+  document.getElementById('batch-out').textContent=lines.join('\n');
+  document.getElementById('batch-out').style.display='block';
+  document.getElementById('batch-copy').style.display='inline-block';
+  addLog('generate',`Batch of ${count} Generated`,`${TIER_NAMES[tier]} keys`,'#00E5A0');
+  updateStats();
+  showToast(`✅ Generated ${count} keys`,'success');
+}
+
+function copyKey(){copyText(document.getElementById('key-output').textContent);}
+function copyBatch(){copyText(document.getElementById('batch-out').textContent);}
+async function copyText(text,btn){
+  await navigator.clipboard.writeText(text);
+  if(btn){const o=btn.textContent;btn.textContent='✓';setTimeout(()=>btn.textContent=o,1500);}
+  showToast('Copied!','success');
+}
+
+// ══════════════════════════════════════════════════════
+//  LOOKUP
+// ══════════════════════════════════════════════════════
+function lookupKey(key){
+  goPage('lookup');
+  document.getElementById('lookup-inp').value=key;
+  doLookup();
+}
+
+async function doLookup(){
+  const key=document.getElementById('lookup-inp').value.trim();
+  if(!key)return;
+  const result=document.getElementById('lookup-result');
+  result.classList.remove('show');
+  try{
+    const data=await workerCall('/admin/lookup',{key});
+    renderLookup(data,key);
+  } catch(e){
+    // Fall back to local data if Worker not configured
+    const keys=getKeys();
+    const local=keys.find(k=>k.key.toUpperCase()===key.toUpperCase());
+    if(local){
+      const now=Math.floor(Date.now()/1000);
+      renderLookup({
+        valid:true,key:local.key,tier:TIER_NAMES[local.tier],
+        expiry:local.tier==='L'?'Never':new Date(local.expiry*1000).toLocaleDateString(),
+        daysLeft:local.tier==='L'?null:Math.max(0,Math.ceil((local.expiry-now)/86400)),
+        activated:false,status:local.status||'active',
+        discordUsername:'Not connected to Worker',note:local.note
+      },key);
+    } else {
+      showToast('Worker not configured and key not found locally','error');
+    }
+  }
+}
+
+function renderLookup(data,rawKey){
+  const result=document.getElementById('lookup-result');
+  if(!data.valid){
+    document.getElementById('lr-title').textContent='Invalid Key';
+    document.getElementById('lr-status-badge').innerHTML=`<span class="badge badge-expired">${data.reason||'invalid'}</span>`;
+    document.getElementById('lr-grid').innerHTML=`<div class="lr-item"><div class="lr-label">Reason</div><div class="lr-value">${data.reason}</div></div>`;
+    document.getElementById('lr-actions').innerHTML='';
+    result.classList.add('show');return;
+  }
+  const statusColors={active:'badge-active',revoked:'badge-revoked',paused:'badge-paused',not_activated:'badge-na',expired:'badge-expired'};
+  document.getElementById('lr-title').textContent=rawKey.slice(0,24)+'…';
+  document.getElementById('lr-status-badge').innerHTML=`<span class="badge ${statusColors[data.status]||'badge-na'}">${data.status||'unknown'}</span>`;
+  const fields=[
+    {l:'Tier',v:data.tier},
+    {l:'Expires',v:data.expiry+(data.daysLeft!=null?` (${data.daysLeft}d left)`:'')},
+    {l:'Discord User',v:data.discordUsername||'Not activated'},
+    {l:'Discord ID',v:data.discordUserId||'—'},
+    {l:'Activated',v:data.activatedAt||'Never'},
+    {l:'Hardware',v:data.hardwareId||'Not bound'},
+    {l:'HW Bound At',v:data.hardwareBoundAt||'—'},
+    {l:'Use Count',v:data.useCount||0},
+    {l:'Last Used',v:data.lastUsed||'Never'},
+    {l:'Revoke Reason',v:data.revokeReason||'—'},
+  ];
+  document.getElementById('lr-grid').innerHTML=fields.map(f=>`<div class="lr-item"><div class="lr-label">${f.l}</div><div class="lr-value" style="font-size:12px">${f.v}</div></div>`).join('');
+
+  // Action buttons — work on any key via Worker, don't need local storage entry
+  let acts='';
+  const esc=rawKey.replace(/'/g,"\\'");
+  if(data.status==='active'||data.status==='not_activated'){
+    if(data.activated){
+      acts+=`<button class="act-btn act-pause" onclick="workerActionDirect('${esc}','pause')">⏸ Pause</button>`;
+      acts+=`<button class="act-btn act-revoke" onclick="workerActionDirect('${esc}','revoke')">🔴 Revoke</button>`;
+      acts+=`<button class="act-btn act-reset" onclick="workerActionDirect('${esc}','hwreset')">🔄 Reset Hardware</button>`;
+    }
+  }
+  if(data.status==='paused'){
+    acts+=`<button class="act-btn act-unpause" onclick="workerActionDirect('${esc}','unpause')">▶ Unpause</button>`;
+    acts+=`<button class="act-btn act-revoke" onclick="workerActionDirect('${esc}','revoke')">🔴 Revoke</button>`;
+  }
+  acts+=`<button class="act-btn act-info" onclick="copyText('${esc}')">📋 Copy Key</button>`;
+  document.getElementById('lr-actions').innerHTML=acts;
+  result.classList.add('show');
+}
+
+async function workerActionDirect(key, action){
+  const titles={pause:'⏸ Pause Key',revoke:'🔴 Revoke Key',unpause:'▶ Unpause Key',hwreset:'🔄 Reset Hardware'};
+  const descs={
+    pause:'The key will stop working immediately in the extension.',
+    revoke:'The key will be permanently revoked. Cannot be undone.',
+    unpause:'Restore the key to active status.',
+    hwreset:'Clear hardware binding so a new device can be used.'
+  };
+  const needReason = action==='revoke'||action==='pause';
+  openModal(titles[action]||action, descs[action]||'', needReason, async()=>{
+    const reason=document.getElementById('modal-reason').value.trim();
+    const s=getSettings();
+    if(!s.workerUrl||!s.workerSecret){
+      showToast('Worker not configured — go to Settings tab first','error');
+      return;
+    }
+    const ep = action==='revoke'?'/admin/revoke':
+               action==='pause'?'/admin/pause':
+               action==='unpause'?'/admin/unpause':
+               '/admin/hwreset';
+    // Show a progress toast
+    showToast(`Calling Worker ${ep}…`,'info');
+    const result = await workerCall(ep,{key,reason});
+    console.log('[Admin] Worker response for',ep,JSON.stringify(result));
+    if(result.error){
+      // Show the exact error from the Worker so we know what's wrong
+      showToast(`❌ ${result.error} (HTTP ${result._status||'?'})`, 'error');
+      // Also show an alert so it's definitely visible
+      setTimeout(()=>alert(`Worker error on ${ep}:\n\n${result.error}\n\nHTTP status: ${result._status||'unknown'}\n\nCheck:\n1. Worker URL is correct in Settings\n2. WORKER_SECRET matches Cloudflare exactly\n3. Worker was redeployed with latest code`), 100);
+      return;
+    }
+    addLog(action,`Key ${action}d`,key.slice(0,20)+'…',
+      action==='revoke'?'#FF4466':action==='pause'?'#FF8C00':'#00E5A0');
+    showToast(`✅ Key ${action}d — takes effect immediately in extension`,'success');
+    // Update local storage if key exists there
+    const keys=getKeys();
+    const idx=keys.findIndex(k=>k.key.toUpperCase()===key.toUpperCase());
+    if(idx>=0){
+      if(action==='revoke')keys[idx].status='revoked';
+      else if(action==='pause')keys[idx].status='paused';
+      else if(action==='unpause')keys[idx].status='active';
+      saveKeys(keys);updateStats();renderKeys();
+    }
+    setTimeout(()=>doLookup(),600);
+  }, action==='revoke'?'danger':'warn');
+}
+
+
+
+// ══════════════════════════════════════════════════════
+//  LOGS
+// ══════════════════════════════════════════════════════
+let logFilter='all';
+function filterLogs(f){
+  logFilter=f;
+  document.querySelectorAll('[id^="lf-"]').forEach(b=>b.classList.remove('on'));
+  document.getElementById('lf-'+f).classList.add('on');
+  renderLogs();
+}
+
+function renderLogs(){
+  const logs=getLogs();
+  const el=document.getElementById('logs-list');
+  const filtered=logFilter==='all'?logs:logs.filter(l=>l.type===logFilter);
+  if(!filtered.length){el.innerHTML=`<div class="log-empty">No log entries yet.<br><span style="font-size:11px;color:var(--dim)">Activity will appear here as you manage keys.</span></div>`;return;}
+  el.innerHTML=filtered.map(l=>`
+    <div class="log-entry">
+      <div class="log-dot" style="background:${l.color||'#6666AA'}"></div>
+      <div class="log-body">
+        <div class="log-title">${l.title}</div>
+        <div class="log-meta">${l.detail||''}</div>
+      </div>
+      <div class="log-time">${new Date(l.time).toLocaleTimeString()}<br>${new Date(l.time).toLocaleDateString()}</div>
+    </div>`).join('');
+}
+
+function renderDashLogs(){
+  const logs=getLogs().slice(0,8);
+  const el=document.getElementById('dash-logs');
+  if(!logs.length){el.innerHTML=`<div class="log-empty">No activity yet</div>`;return;}
+  el.innerHTML=logs.map(l=>`
+    <div class="log-entry">
+      <div class="log-dot" style="background:${l.color||'#6666AA'}"></div>
+      <div class="log-body">
+        <div class="log-title" style="font-size:12px">${l.title}</div>
+        <div class="log-meta" style="font-size:10px">${l.detail||''}</div>
+      </div>
+      <div class="log-time" style="font-size:10px">${new Date(l.time).toLocaleTimeString()}</div>
+    </div>`).join('');
+}
+
+function clearLogs(){
+  if(!confirm('Clear all activity logs?'))return;
+  localStorage.removeItem('sb_logs');
+  renderLogs();renderDashLogs();
+  showToast('Logs cleared','info');
+}
+
+function exportLogs(){
+  const logs=getLogs();
+  const lines=['Time,Type,Title,Detail',...logs.map(l=>`"${new Date(l.time).toISOString()}","${l.type}","${l.title}","${l.detail||''}"`)];
+  download('studybuddy-logs.csv',lines.join('\n'));
+}
+
+// ══════════════════════════════════════════════════════
+//  SETTINGS
+// ══════════════════════════════════════════════════════
+function loadSettings(){
+  const s=getSettings();
+  if(s.workerUrl)document.getElementById('s-worker-url').value=s.workerUrl;
+  if(s.workerSecret)document.getElementById('s-worker-secret').value=s.workerSecret;
+}
+
+async function saveWorkerSettings(){
+  const url=document.getElementById('s-worker-url').value.trim().replace(/\/$/,'');
+  const secret=document.getElementById('s-worker-secret').value.trim();
+  if(!url||!secret){showToast('Please enter both Worker URL and Secret','error');return;}
+  saveSettings({...getSettings(),workerUrl:url,workerSecret:secret});
+  document.getElementById('setup-banner').style.display='none';
+  const el=document.getElementById('worker-test-result');
+  el.style.display='block';
+  el.style.color='var(--sec)';
+  el.textContent='Testing connection…';
+  try{
+    const res=await fetch(url+'/status',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Worker-Secret':secret},
+      body:JSON.stringify({key:'SBD-TEST-12345-ABCDEFAB'})
+    });
+    const d=await res.json();
+    // Any response from the Worker (even an error) means it's reachable
+    if(res.status!==0){
+      el.style.color='var(--mint)';
+      el.textContent='✅ Worker connected! ('+url+')';
+      document.querySelector('.worker-badge').style.background='rgba(0,229,160,.15)';
+      document.querySelector('.worker-badge').style.color='var(--mint)';
+      document.querySelector('.worker-badge').textContent='● Worker';
+      showToast('✅ Worker connected and saved','success');
+    }
+  } catch(e){
+    el.style.color='var(--red)';
+    el.textContent='❌ Connection failed: '+e.message+'\n\nMake sure the URL is correct and CORS is enabled.';
+    showToast('Connection failed — check URL','error');
+  }
+}
+
+async function changePassword(){
+  const np=document.getElementById('s-newpass').value;
+  const cp=document.getElementById('s-confirmpass').value;
+  if(!np||np!==cp){showToast('Passwords do not match','error');return;}
+  const hash=await sha256(np);
+  localStorage.setItem('sb_admin_hash',hash);
+  document.getElementById('s-newpass').value='';
+  document.getElementById('s-confirmpass').value='';
+  showToast('✅ Password changed','success');
+}
+
+function confirmClearAll(){
+  openModal('🗑 Clear All Keys','This will delete ALL keys from local storage. This cannot be undone.',false,()=>{
+    localStorage.removeItem('sb_keys');updateStats();renderKeys();showToast('All keys cleared','info');
+  },'danger');
+}
+
+// ══════════════════════════════════════════════════════
+//  EXPORT
+// ══════════════════════════════════════════════════════
+function exportCSV(){
+  const keys=getKeys();
+  const now=Math.floor(Date.now()/1000);
+  const lines=['Key,Tier,Note,Expires,Status,Created'];
+  keys.forEach(k=>{
+    const exp=k.tier==='L'?'Never':new Date(k.expiry*1000).toLocaleDateString();
+    const created=new Date(k.created*1000).toLocaleDateString();
+    lines.push(`"${k.key}","${TIER_NAMES[k.tier]}","${k.note||''}","${exp}","${getKeyStatus(k,now)}","${created}"`);
+  });
+  download('studybuddy-keys.csv',lines.join('\n'));
+}
+
+function download(name,content){
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(content);
+  a.download=name;a.click();
+}
+
+// ══════════════════════════════════════════════════════
+//  MODAL
+// ══════════════════════════════════════════════════════
+let _modalAction=null;
+function openModal(title,desc,showReason,action,style='warn'){
+  document.getElementById('modal-title').textContent=title;
+  document.getElementById('modal-desc').textContent=desc;
+  document.getElementById('modal-reason-group').style.display=showReason?'flex':'none';
+  document.getElementById('modal-reason').value='';
+  document.getElementById('modal-confirm-btn').className='modal-confirm '+style;
+  document.getElementById('modal').classList.add('show');
+  _modalAction=action;
+}
+function closeModal(){document.getElementById('modal').classList.remove('show');_modalAction=null;}
+function runModalAction(){closeModal();if(_modalAction)_modalAction();}
+
+// ══════════════════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════════════════
+let _toastTimer=null;
+function showToast(msg,type='info'){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast '+type+' show';
+  clearTimeout(_toastTimer);
+  _toastTimer=setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// ══════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════
+function init(){
+  updateStats();
+  renderKeys();
+  renderDashLogs();
+  renderLogs();
+  loadSettings();
+  const s=getSettings();
+  if(!s.workerUrl||!s.workerSecret){
+    document.getElementById('setup-banner').style.display='flex';
+    document.querySelector('.worker-badge').style.background='rgba(255,140,0,.15)';
+    document.querySelector('.worker-badge').style.color='#FF8C00';
+    document.querySelector('.worker-badge').textContent='⚠ Worker';
+  } else {
+    testWorker();
+  }
+}
+</script>
+</body>
+</html>
